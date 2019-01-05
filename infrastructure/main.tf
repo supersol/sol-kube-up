@@ -75,7 +75,7 @@ resource "google_compute_instance" "kube-controller-" {
 
   boot_disk {
     initialize_params {
-      size = 200
+      size = 20
       image = "ubuntu-os-cloud/ubuntu-1804-lts"
     }
   }
@@ -92,6 +92,8 @@ resource "google_compute_instance" "kube-controller-" {
   service_account {
     scopes = ["compute-rw", "storage-ro", "service-management", "service-control", "logging-write", "monitoring"]
   }
+
+  metadata_startup_script = "apt install python"
 }
 
 resource "google_compute_instance" "kube-worker-" {
@@ -104,7 +106,7 @@ resource "google_compute_instance" "kube-worker-" {
 
   boot_disk {
     initialize_params {
-      size  = 200
+      size  = 20
       image = "ubuntu-os-cloud/ubuntu-1804-lts"
     }
   }
@@ -125,4 +127,6 @@ resource "google_compute_instance" "kube-worker-" {
   service_account {
     scopes = ["compute-rw", "storage-ro", "service-management", "service-control", "logging-write", "monitoring"]
   }
+
+  metadata_startup_script = "apt install python"
 }
