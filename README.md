@@ -1,2 +1,2 @@
-Infrastructure in GCP via Terraform
-Install cluster via Ansible
+### 1. Infrastructure in GCP via Terraform
+### 2. Install cluster via Ansible
