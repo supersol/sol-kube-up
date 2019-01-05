@@ -82,8 +82,8 @@ resource "google_compute_instance" "kube-controller-" {
 
   network_interface {
     subnetwork = "${google_compute_subnetwork.kube_subnetwork.self_link}"
-    address = "10.240.0.1${count.index}"
-    
+    network_ip = "10.240.0.1${count.index}"
+
     access_config {
       // Ephemeral IP
     }
@@ -115,7 +115,7 @@ resource "google_compute_instance" "kube-worker-" {
 
   network_interface {
     subnetwork = "${google_compute_subnetwork.kube_subnetwork.self_link}"
-    address    = "10.240.0.2${count.index}"
+    network_ip    = "10.240.0.2${count.index}"
 
     access_config {
       // Ephemeral IP
