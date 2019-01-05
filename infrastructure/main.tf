@@ -1,5 +1,5 @@
-# export GOOGLE_APPLICATION_CREDENTIALS="[PATH_TO_CREDS/SOME_CREDS.json]"
-# export GOOGLE_PROJECT="YOUR_PROJECT_NAME"
+// export GOOGLE_APPLICATION_CREDENTIALS="[PATH_TO_CREDS/SOME_CREDS.json]"
+// export GOOGLE_PROJECT="YOUR_PROJECT_NAME"
 provider "google" {
   region = "europe-west1"
 }
@@ -66,7 +66,7 @@ resource "google_compute_address" "ip_address" {
 
 resource "google_compute_instance" "kube-controller-" {
   count          = "${var.node_count}"
-  name           = "${terraform.workspace}-kube-controller-${count.index}"
+  name           = "kube-controller-${count.index}"
   machine_type   = "n1-standard-1"
   zone           = "${var.zones["${count.index}"]}"
   tags           = ["${terraform.workspace}-kubernetes", "controller"]
@@ -83,6 +83,10 @@ resource "google_compute_instance" "kube-controller-" {
   network_interface {
     subnetwork = "${google_compute_subnetwork.kube_subnetwork.self_link}"
     address = "10.240.0.1${count.index}"
+    
+    access_config {
+      // Ephemeral IP
+    }
   }
 
   service_account {
@@ -92,7 +96,7 @@ resource "google_compute_instance" "kube-controller-" {
 
 resource "google_compute_instance" "kube-worker-" {
   count          = "${var.node_count}"
-  name           = "${terraform.workspace}-kube-worker-${count.index}"
+  name           = "kube-worker-${count.index}"
   machine_type   = "n1-standard-1"
   zone           = "${var.zones["${count.index}"]}"
   tags           = ["${terraform.workspace}-kubernetes", "worker"]
@@ -112,6 +116,10 @@ resource "google_compute_instance" "kube-worker-" {
   network_interface {
     subnetwork = "${google_compute_subnetwork.kube_subnetwork.self_link}"
     address    = "10.240.0.2${count.index}"
+
+    access_config {
+      // Ephemeral IP
+    }
   }
 
   service_account {
