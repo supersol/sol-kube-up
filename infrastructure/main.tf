@@ -64,9 +64,9 @@ resource "google_compute_address" "ip_address" {
   name = "kube-ip-address"
 }
 
-resource "google_compute_instance" "kube-controller-" {
+resource "google_compute_instance" "controller-" {
   count          = "${var.node_count}"
-  name           = "kube-controller-${count.index}"
+  name           = "controller-${count.index}"
   machine_type   = "n1-standard-1"
   zone           = "${var.zones["${count.index}"]}"
   tags           = ["${terraform.workspace}-kubernetes", "controller"]
@@ -96,9 +96,9 @@ resource "google_compute_instance" "kube-controller-" {
   metadata_startup_script = "apt install python"
 }
 
-resource "google_compute_instance" "kube-worker-" {
+resource "google_compute_instance" "worker-" {
   count          = "${var.node_count}"
-  name           = "kube-worker-${count.index}"
+  name           = "worker-${count.index}"
   machine_type   = "n1-standard-1"
   zone           = "${var.zones["${count.index}"]}"
   tags           = ["${terraform.workspace}-kubernetes", "worker"]

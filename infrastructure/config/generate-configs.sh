@@ -122,3 +122,12 @@ done
 for node in controller-0 controller-1 controller-2; do
   gcloud compute scp admin.kubeconfig kube-controller-manager.kubeconfig kube-scheduler.kubeconfig ${node}:~/
 done
+
+# generate and upload encryption config
+ENCRYPTION_KEY=$(head -c 32 /dev/urandom | base64)
+
+cat encrypt-config-template.yaml | sed "s/ENCRYPTION_KEY/${ENCRYPTION_KEY}" > encryption-config.yaml
+
+for node in controller-0 controller-1 controller-2; do
+  gcloud compute scp encryption-config.yaml ${node}:~/
+done
