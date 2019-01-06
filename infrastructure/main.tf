@@ -4,6 +4,10 @@ provider "google" {
   region = "europe-west1"
 }
 
+variable "region" {
+  default = "europe-west1"
+}
+
 variable "node_count" {
   default = "3"
 }
@@ -51,13 +55,52 @@ resource "google_compute_firewall" "kube-external" {
 
   allow {
     protocol = "tcp"
-    ports = ["22", "6443"]
+    ports    = ["22", "6443"]
   }
 
   allow {
     protocol = "icmp"
   }
 
+}
+
+resource "google_compute_firewall" "kube-allow-healthz" {
+  name          = "kube-allow-healthz"
+  network       = "${google_compute_network.kube_network.self_link}"
+  source_ranges = ["209.85.152.0/22", "209.85.204.0/22", "35.191.0.0/16"]
+
+  allow {
+    protocol = "tcp"
+  }
+}
+
+resource "google_compute_http_health_check" "healthz" {
+  name         = "kube-healthz"
+  description  = "kuber health check"
+  host         = "kubernetes.default.svc.cluster.local"
+  request_path = "/healthz"
+}
+
+resource "google_compute_target_pool" "kube-target-pool" {
+  name          = "kube-target-pool"
+  health_checks = ["kube-healthz"]
+  instances     = ["controller-0", "controller-1", "controller-2"]
+}
+
+resource "google_compute_forwarding_rule" "kube-forward-rule" {
+  name       = "kube-forward-rule"
+  ip_address = "${google_compute_address.ip_address.address}"
+  ports      = ["6443"]
+  region     = "${var.region}"
+  target     = "${google_compute_target_pool.kube-target-pool.name}"
+}
+
+resource "google_compute_route" "kube-route-" {
+  count       = "${var.node_count}"
+  dest_range  = "10.200.${count.index}.0/24"
+  name        = "kube-route-${count.index}"
+  network     = "${google_compute_network.kube_network.self_link}"
+  next_hop_ip = "10.240.0.2${count.index}"
 }
 
 resource "google_compute_address" "ip_address" {
