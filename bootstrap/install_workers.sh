@@ -152,4 +152,3 @@ EOF
 sudo systemctl daemon-reload
 sudo systemctl enable docker kubelet kube-proxy
 sudo systemctl start docker kubelet kube-proxy
-

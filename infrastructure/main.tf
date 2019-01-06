@@ -81,25 +81,28 @@ resource "google_compute_http_health_check" "healthz" {
   request_path = "/healthz"
 }
 
+# TODO: set instances dynamcally, how? =\
 resource "google_compute_target_pool" "kube-target-pool" {
   name          = "kube-target-pool"
   health_checks = ["kube-healthz"]
-  instances     = ["controller-0", "controller-1", "controller-2"]
+  instances     = ["europe-west1-b/controller-0",
+                   "europe-west1-c/controller-1",
+                   "europe-west1-d/controller-2"]
 }
 
 resource "google_compute_forwarding_rule" "kube-forward-rule" {
   name       = "kube-forward-rule"
   ip_address = "${google_compute_address.ip_address.address}"
-  ports      = ["6443"]
+  port_range = "6443"
   region     = "${var.region}"
-  target     = "${google_compute_target_pool.kube-target-pool.name}"
+  target     = "${google_compute_target_pool.kube-target-pool.self_link}"
 }
 
 resource "google_compute_route" "kube-route-" {
   count       = "${var.node_count}"
   dest_range  = "10.200.${count.index}.0/24"
   name        = "kube-route-${count.index}"
-  network     = "${google_compute_network.kube_network.self_link}"
+  network     = "${google_compute_network.kube_network.name}"
   next_hop_ip = "10.240.0.2${count.index}"
 }
 
