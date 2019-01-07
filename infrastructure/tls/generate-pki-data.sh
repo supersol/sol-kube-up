@@ -18,7 +18,7 @@ cfssl gencert \
 # generate kubelet certs/keys
 for node in worker-0 worker-1 worker-2; do
     echo "Generating workers certificates"
-    cat node-csr-template.json | sed "s/NODE_NAME/${node}" > "${node}-csr.json"
+    cat node-csr-template.json | sed "s/NODE_NAME/${node}/" > "${node}-csr.json"
 
     external_ip=$(gcloud compute instances describe ${node} \
                   --format 'value(networkInterfaces[0].accessConfigs[0].natIP)')

@@ -7,6 +7,8 @@
 
 # TODO: try to simplify duplicated code
 
+TLS_DIR="../tls"
+
 KUBERNETES_PUBLIC_ADDRESS=$(gcloud compute addresses describe kube-ip-address \
                             --region $(gcloud config get-value compute/region) \
                             --format 'value(address)')
@@ -14,14 +16,14 @@ KUBERNETES_PUBLIC_ADDRESS=$(gcloud compute addresses describe kube-ip-address \
 # create configs for worker nodes
 for node in worker-0 worker-1 worker-2; do
   kubectl config set-cluster kubernetes \
-    --certificate-authority=ca.pem \
+    --certificate-authority=${TLS_DIR}/ca.pem \
     --embed-certs=true \
     --server=https://${KUBERNETES_PUBLIC_ADDRESS}:6443 \
     --kubeconfig=${node}.kubeconfig
 
   kubectl config set-credentials system:node:${node} \
-    --client-certificate=${node}.pem \
-    --client-key=${node}-key.pem \
+    --client-certificate=${TLS_DIR}/${node}.pem \
+    --client-key=${TLS_DIR}/${node}-key.pem \
     --embed-certs=true \
     --kubeconfig=${node}.kubeconfig
 
@@ -35,14 +37,14 @@ done
 
 # create config for kube-proxy
 kubectl config set-cluster kubernetes \
-    --certificate-authority=ca.pem \
+    --certificate-authority=${TLS_DIR}/ca.pem \
     --embed-certs=true \
     --server=https://${KUBERNETES_PUBLIC_ADDRESS}:6443 \
     --kubeconfig=kube-proxy.kubeconfig
 
 kubectl config set-credentials system:kube-proxy \
-    --client-certificate=kube-proxy.pem \
-    --client-key=kube-proxy-key.pem \
+    --client-certificate=${TLS_DIR}/kube-proxy.pem \
+    --client-key=${TLS_DIR}/kube-proxy-key.pem \
     --embed-certs=true \
     --kubeconfig=kube-proxy.kubeconfig
 
@@ -55,14 +57,14 @@ kubectl config use-context default --kubeconfig=kube-proxy.kubeconfig
 
 # create config for kube-controller-manager
 kubectl config set-cluster kubernetes \
-    --certificate-authority=ca.pem \
+    --certificate-authority=${TLS_DIR}/ca.pem \
     --embed-certs=true \
     --server=https://127.0.0.1:6443 \
     --kubeconfig=kube-controller-manager.kubeconfig
 
 kubectl config set-credentials system:kube-controller-manager \
-    --client-certificate=kube-controller-manager.pem \
-    --client-key=kube-controller-manager-key.pem \
+    --client-certificate=${TLS_DIR}/kube-controller-manager.pem \
+    --client-key=${TLS_DIR}/kube-controller-manager-key.pem \
     --embed-certs=true \
     --kubeconfig=kube-controller-manager.kubeconfig
 
@@ -75,14 +77,14 @@ kubectl config use-context default --kubeconfig=kube-controller-manager.kubeconf
 
 # create config for kube-scheduler
 kubectl config set-cluster kubernetes \
-    --certificate-authority=ca.pem \
+    --certificate-authority=${TLS_DIR}/ca.pem \
     --embed-certs=true \
     --server=https://127.0.0.1:6443 \
     --kubeconfig=kube-scheduler.kubeconfig
 
 kubectl config set-credentials system:kube-scheduler \
-    --client-certificate=kube-scheduler.pem \
-    --client-key=kube-scheduler-key.pem \
+    --client-certificate=${TLS_DIR}/kube-scheduler.pem \
+    --client-key=${TLS_DIR}/kube-scheduler-key.pem \
     --embed-certs=true \
     --kubeconfig=kube-scheduler.kubeconfig
 
@@ -95,14 +97,14 @@ kubectl config use-context default --kubeconfig=kube-scheduler.kubeconfig
 
 # create config for admin
 kubectl config set-cluster kubernetes \
-    --certificate-authority=ca.pem \
+    --certificate-authority=${TLS_DIR}/ca.pem \
     --embed-certs=true \
     --server=https://127.0.0.1:6443 \
     --kubeconfig=admin.kubeconfig
 
 kubectl config set-credentials admin \
-    --client-certificate=admin.pem \
-    --client-key=admin-key.pem \
+    --client-certificate=${TLS_DIR}/admin.pem \
+    --client-key=${TLS_DIR}/admin-key.pem \
     --embed-certs=true \
     --kubeconfig=admin.kubeconfig
 
@@ -126,7 +128,7 @@ kubectl config use-context default --kubeconfig=admin.kubeconfig
 # generate and upload encryption config
 ENCRYPTION_KEY=$(head -c 32 /dev/urandom | base64)
 
-cat encrypt-config-template.yaml | sed "s/ENCRYPTION_KEY/${ENCRYPTION_KEY}" > encryption-config.yaml
+cat encrypt-config-template.yaml | sed "s/ENCRYPTION_KEY/${ENCRYPTION_KEY}/" > encryption-config.yaml
 
 #for node in controller-0 controller-1 controller-2; do
 #  gcloud compute scp encryption-config.yaml ${node}:~/

@@ -30,13 +30,14 @@
         state: directory
     - name: copy etcd certificates and key
       copy:
-        src: ../infrastructure/tls/{{ item }}
+        src: "../infrastructure/tls/{{ item }}"
         dest: /etc/etcd
+        mode: 0400
       with_items:
         - ca.pem
         - kubernetes-key.pem
         - kubernetes.pem
-    - name: copy template
+    - name: copy systemd etcd service template
       template:
         src: templates/etcd.service.jinja2
         dest: /etc/systemd/system/etcd.service
@@ -45,32 +46,45 @@
         mode: 0400
     # installing control plane
     - name: create config directory
-        file:
-          path: /etc/kubernetes/config /var/lib/kubernetes
-          state: directory
+      file:
+        path: /etc/kubernetes/config /var/lib/kubernetes
+        state: directory
+    - name: copy control plane configs
+      copy:
+        src: "../infrastructure/config/{{ item }}"
+        dest: /var/lib/kubernetes
+        mode: 0400
+      with_items:
+        - kube-controller-manager.kubeconfig
+        - kube-scheduler.kubeconfig
+        - encryption-config.yaml
+    - name: copy yaml config
+      copy:
+        src: ../infrastructure/config/kube-scheduler.yaml
+        dest: /etc/kubernetes/config/kube-scheduler.yaml
+        mode: 0400
     - name: download control plane binaries
       get_url:
-        url: {{ item }}
+        url: "{{ item }}"
         dest: /root
         mode: 700
       with_items:
         - https://storage.googleapis.com/kubernetes-release/release/v1.12.0/bin/linux/amd64/kube-apiserver
         - https://storage.googleapis.com/kubernetes-release/release/v1.12.0/bin/linux/amd64/kube-controller-manager
         - https://storage.googleapis.com/kubernetes-release/release/v1.12.0/bin/linux/amd64/kube-scheduler
-        - "https://storage.googleapis.com/kubernetes-release/release/v1.12.0/bin/linux/amd64/kubectl
+        - https://storage.googleapis.com/kubernetes-release/release/v1.12.0/bin/linux/amd64/kubectl
     - name: copy control plane binaries
-        shell: mv /root/kube* /usr/local/bin
+      shell: mv /root/kube* /usr/local/bin
     - name: copy control plane certificates, keys and encryption config
       copy:
-        src: ../infrastructure/tls/{{ item }}
-        dest: /etc/etcd
+        src: "../infrastructure/tls/{{ item }}"
+        dest: /var/lib/kubernetes
       with_items:
         - ca.pem
         - kubernetes-key.pem
         - kubernetes.pem
         - service-account-key.pem
         - service-account.pem
-        - encryption-config.yaml
     - name: copy systemd apiserver service template
       template:
         src: templates/kube-apiserver.service.jinja2
@@ -78,41 +92,24 @@
         owner: root
         group: root
         mode: 0400
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    - name: systemd daemon reload
+      systemd:
+        daemon_reload: yes
+    - name: enable control plane services
+      systemd:
+        name: "{{ item }}"
+        enabled: yes
+      with_items:
+        - etcd
+        - kube-apiserver
+        - kube-controller-manager
+        - kube-scheduler
+    - name: start control plane services
+      systemd:
+        name: "{{ item }}"
+        state: started
+      with_items:
+        - etcd
+        - kube-apiserver
+        - kube-controller-manager
+        - kube-scheduler
