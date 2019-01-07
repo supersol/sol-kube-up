@@ -139,7 +139,7 @@ resource "google_compute_instance" "controller-" {
     scopes = ["compute-rw", "storage-ro", "service-management", "service-control", "logging-write", "monitoring"]
   }
 
-  metadata_startup_script = "apt install python"
+  metadata_startup_script = "apt install python -y"
 }
 
 resource "google_compute_instance" "worker-" {
@@ -174,5 +174,5 @@ resource "google_compute_instance" "worker-" {
     scopes = ["compute-rw", "storage-ro", "service-management", "service-control", "logging-write", "monitoring"]
   }
 
-  metadata_startup_script = "apt install python"
+  metadata_startup_script = "apt install python -y"
 }

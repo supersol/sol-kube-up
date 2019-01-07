@@ -117,3 +117,8 @@ venv.bak/
 
 ### PyCharm
 .idea/
+
+### Ansible
+bootstrap/*.retry
+bootstrap/gce.ini
+bootstrap/gce.py

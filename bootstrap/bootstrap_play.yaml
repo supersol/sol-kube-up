@@ -1,0 +1,118 @@
+---
+- hosts: tag_controller
+  gather_facts: true
+  become: true
+  become_user: root
+  become_method: sudo
+  vars:
+    ansible_ssh_private_key_file: "{{ lookup('env','ANSIBLE_SSH_PRIVATE_KEY_FILE') }}"
+  tasks:
+    - name: get all
+      debug:
+        msg: "{{ ansible_facts }}"
+    - name: get host
+      debug:
+        msg: "{{ ansible_hostname }}"
+    - name: get ip
+      debug:
+        msg: "{{ ansible_default_ipv4.address }}"
+    # installing etcd
+    - name: download and unpack etcd
+      unarchive:
+        src: https://github.com/coreos/etcd/releases/download/v3.3.9/etcd-v3.3.9-linux-amd64.tar.gz
+        dest: /root
+        remote_src: yes
+    - name: copy etcd binaries
+      shell: mv /root/etcd-v3.3.9-linux-amd64/etcd* /usr/local/bin
+    - name: create dirs
+      file:
+        path: /etc/etcd /var/lib/etcd
+        state: directory
+    - name: copy etcd certificates and key
+      copy:
+        src: ../infrastructure/tls/{{ item }}
+        dest: /etc/etcd
+      with_items:
+        - ca.pem
+        - kubernetes-key.pem
+        - kubernetes.pem
+    - name: copy template
+      template:
+        src: templates/etcd.service.jinja2
+        dest: /etc/systemd/system/etcd.service
+        owner: root
+        group: root
+        mode: 0400
+    # installing control plane
+    - name: create config directory
+        file:
+          path: /etc/kubernetes/config /var/lib/kubernetes
+          state: directory
+    - name: download control plane binaries
+      get_url:
+        url: {{ item }}
+        dest: /root
+        mode: 700
+      with_items:
+        - https://storage.googleapis.com/kubernetes-release/release/v1.12.0/bin/linux/amd64/kube-apiserver
+        - https://storage.googleapis.com/kubernetes-release/release/v1.12.0/bin/linux/amd64/kube-controller-manager
+        - https://storage.googleapis.com/kubernetes-release/release/v1.12.0/bin/linux/amd64/kube-scheduler
+        - "https://storage.googleapis.com/kubernetes-release/release/v1.12.0/bin/linux/amd64/kubectl
+    - name: copy control plane binaries
+        shell: mv /root/kube* /usr/local/bin
+    - name: copy control plane certificates, keys and encryption config
+      copy:
+        src: ../infrastructure/tls/{{ item }}
+        dest: /etc/etcd
+      with_items:
+        - ca.pem
+        - kubernetes-key.pem
+        - kubernetes.pem
+        - service-account-key.pem
+        - service-account.pem
+        - encryption-config.yaml
+    - name: copy systemd apiserver service template
+      template:
+        src: templates/kube-apiserver.service.jinja2
+        dest: /etc/systemd/system/kube-apiserver.service
+        owner: root
+        group: root
+        mode: 0400
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

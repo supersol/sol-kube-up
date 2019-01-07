@@ -114,20 +114,20 @@ kubectl config set-context default \
 kubectl config use-context default --kubeconfig=admin.kubeconfig
 
 # TODO: use ansible!
-# upload config files
-for node in worker-0 worker-1 worker-2; do
-  gcloud compute scp ${node}.kubeconfig kube-proxy.kubeconfig ${node}:~/
-done
-
-for node in controller-0 controller-1 controller-2; do
-  gcloud compute scp admin.kubeconfig kube-controller-manager.kubeconfig kube-scheduler.kubeconfig ${node}:~/
-done
+## upload config files
+#for node in worker-0 worker-1 worker-2; do
+#  gcloud compute scp ${node}.kubeconfig kube-proxy.kubeconfig ${node}:~/
+#done
+#
+#for node in controller-0 controller-1 controller-2; do
+#  gcloud compute scp admin.kubeconfig kube-controller-manager.kubeconfig kube-scheduler.kubeconfig ${node}:~/
+#done
 
 # generate and upload encryption config
 ENCRYPTION_KEY=$(head -c 32 /dev/urandom | base64)
 
 cat encrypt-config-template.yaml | sed "s/ENCRYPTION_KEY/${ENCRYPTION_KEY}" > encryption-config.yaml
 
-for node in controller-0 controller-1 controller-2; do
-  gcloud compute scp encryption-config.yaml ${node}:~/
-done
+#for node in controller-0 controller-1 controller-2; do
+#  gcloud compute scp encryption-config.yaml ${node}:~/
+#done
