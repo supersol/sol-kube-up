@@ -6,6 +6,7 @@
   become_method: sudo
   vars:
     ansible_ssh_private_key_file: "{{ lookup('env','ANSIBLE_SSH_PRIVATE_KEY_FILE') }}"
+    ansible_host_key_checking: false
   tasks:
     - name: get all
       debug:
@@ -123,3 +124,27 @@
         - kube-apiserver
         - kube-controller-manager
         - kube-scheduler
+    # install nginx proxy
+    - name: install nginx
+      apt:
+        name: nginx
+        state: present
+      environment:
+        RUNLEVEL: 1
+    - name: copy nginx conf
+      template:
+        src: templates/kubernetes.default.svc.cluster.local.jinja2
+        dest: /etc/nginx/sites-available/kubernetes.default.svc.cluster.local
+    - name: create nginx symlink
+      file:
+        src: /etc/nginx/sites-enabled/
+        dest: /etc/nginx/sites-available/kubernetes.default.svc.cluster.local
+        state: link
+    - name: enable nginx
+      systemd:
+        name: nginx
+        enabled: yes
+    - name: start nginx
+      systemd:
+        name: nginx
+        state: started
