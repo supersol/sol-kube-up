@@ -137,8 +137,8 @@
         dest: /etc/nginx/sites-available/kubernetes.default.svc.cluster.local
     - name: create nginx symlink
       file:
-        src: /etc/nginx/sites-enabled/
-        dest: /etc/nginx/sites-available/kubernetes.default.svc.cluster.local
+        src: /etc/nginx/sites-available/kubernetes.default.svc.cluster.local
+        dest: /etc/nginx/sites-enabled/kubernetes.default.svc.cluster.local
         state: link
     - name: enable nginx
       systemd:
