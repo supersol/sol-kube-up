@@ -1,0 +1,52 @@
+- hosts: tag_worker
+  gather_facts: true
+  become: true
+  become_user: root
+  become_method: sudo
+  vars:
+    ansible_ssh_private_key_file: "{{ lookup('env','ANSIBLE_SSH_PRIVATE_KEY_FILE') }}"
+    ansible_host_key_checking: false
+  tasks:
+    - name: update apt cache
+      apt:
+        upgrade: yes
+        update_cache: yes
+        cache_valid_time: 86400
+    - name: install net packages
+      apt:
+        name: {{ item }}
+      with_items:
+        - socat
+        - conntrack
+        - ipset
+    - name: download workers suit
+      get_url:
+        url: {{ item }}
+        dest: /root
+        mode: 700
+      with_items:
+        - https://storage.googleapis.com/kubernetes-release/release/v1.12.0/bin/linux/amd64/kubectl
+        - https://storage.googleapis.com/kubernetes-release/release/v1.12.0/bin/linux/amd64/kube-proxy
+        - https://storage.googleapis.com/kubernetes-release/release/v1.12.0/bin/linux/amd64/kubelet
+    - name: copy worker suit binaries
+      shell: mv /root/kube* /usr/local/bin/
+    - name: download docker and network plugin
+      unarchive:
+        src: {{ item }}
+        dest: /root
+        remote_src: yes
+      with_items:
+        - https://download.docker.com/linux/static/stable/x86_64/docker-18.09.0.tgz
+        - https://github.com/containernetworking/plugins/releases/download/v0.6.0/cni-plugins-amd64-v0.6.0.tgz
+    # TODO: move docker and cni binaries
+    - name: make work dirs
+      file:
+        path: {{ item }}
+        state: directory
+      with_items:
+        - /etc/cni/net.d
+        - /opt/cni/bin
+        - /var/lib/kubelet
+        - /var/lib/kube-proxy
+        - /var/lib/kubernetes
+        - /var/run/kubernetes
